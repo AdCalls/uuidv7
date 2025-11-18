@@ -8,12 +8,16 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
+    id 'maven-publish'
 }
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
+
+group = 'com.adcalls'
+version = '0.1.0'
 
 configurations {
     compileOnly {
@@ -22,8 +26,6 @@ configurations {
 }
 
 dependencies {
-    group = 'com.adcalls'
-    version = '0.1.0'
 
     // Use JUnit Jupiter for testing.
     testImplementation libs.junit.jupiter
@@ -54,4 +56,27 @@ java {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            groupId = project.group
+            artifactId = 'uuidv7'
+            version = project.version
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/AdCalls/uuidv7")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }
