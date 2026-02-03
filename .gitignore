@@ -1,6 +1,7 @@
 .gradle
 build/
 gradle.properties
+bundle/
 
 ### IntelliJ IDEA ###
 .idea
