@@ -9,6 +9,7 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
 }
 
 repositories {
@@ -17,7 +18,7 @@ repositories {
 }
 
 group = 'com.adcalls'
-version = '0.1.0'
+version = '1.0.0'
 
 configurations {
     compileOnly {
@@ -51,6 +52,8 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 tasks.named('test') {
@@ -60,23 +63,65 @@ tasks.named('test') {
 
 publishing {
     publications {
-        maven(MavenPublication) {
-            from components.java
+            mavenJava(MavenPublication) {
+                from components.java
 
-            groupId = project.group
-            artifactId = 'uuidv7'
-            version = project.version
-        }
-    }
+                groupId = project.group
+                artifactId = 'uuidv7'
+                version = project.version
 
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/AdCalls/uuidv7")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+                pom {
+                    name = 'UUIDv7 Generator'
+                    description = 'This library generates UUIDv7 from annotations.'
+                    url = 'https://github.com/AdCalls/uuidv7'
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/license/mit'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'AdCalls'
+                            name = 'AdCalls'
+                            email = 'dev@adcalls.com'
+                        }
+                    }
+
+                    scm {
+                        connection = 'scm:git:git://github.com/AdCalls/uuidv7.git'
+                        developerConnection = 'scm:git:ssh://github.com:AdCalls/uuidv7.git'
+                        url = 'https://github.com/AdCalls/uuidv7'
+                    }
+                }
             }
         }
+
+    repositories {
+         maven {
+             name = "OSSRH"
+             url = uri(
+                 version.endsWith("SNAPSHOT")
+                     ? "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                     : "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+             )
+
+             credentials {
+                 username = project.findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+                 password = project.findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+             }
+         }
+     }
+}
+
+signing {
+    def signingKey = project.findProperty("signing.keyId") ?: System.getenv("SIGNING_KEY_ID")
+    def signingPassword = project.findProperty("signing.password") ?: System.getenv("SIGNING_PASSWORD")
+    def signingSecretKey = project.findProperty("signing.secretKeyRingFile") ?: System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+
+    if (signingKey && signingPassword && signingSecretKey) {
+        sign publishing.publications.mavenJava
     }
 }
